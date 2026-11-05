@@ -1,0 +1,140 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="description"
+          content="NEXUS RADAR — Scientific Research and Technology Intelligence Platform.">
+
+    <meta name="theme-color" content="#080d19">
+
+    <title>{% block title %}NEXUS RADAR — Research Intelligence{% endblock %}</title>
+
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <!-- Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+          rel="stylesheet">
+
+    <!-- Main stylesheet -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    {% block head %}{% endblock %}
+</head>
+
+<body>
+
+<!-- NAVIGATION -->
+<nav class="navbar navbar-expand-lg navbar-dark app-navbar sticky-top">
+    <div class="container-fluid px-3 px-lg-5">
+
+        <a class="navbar-brand d-flex align-items-center gap-2"
+           href="{{ url_for('main.dashboard') }}">
+
+            <span class="brand-mark">N</span>
+
+            <span class="brand-name">
+                NEXUS <span class="brand-light">RADAR</span>
+            </span>
+        </a>
+
+        <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#mainNav"
+            aria-controls="mainNav"
+            aria-expanded="false"
+            aria-label="Toggle navigation">
+
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNav">
+
+            <div class="navbar-nav ms-auto gap-lg-3">
+
+                <a class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}"
+                   href="{{ url_for('main.dashboard') }}">
+                    Overview
+                </a>
+
+                <a class="nav-link {% if request.endpoint == 'main.research' %}active{% endif %}"
+                   href="{{ url_for('main.research') }}">
+                    Research
+                </a>
+
+                <a class="nav-link {% if request.endpoint == 'main.news' %}active{% endif %}"
+                   href="{{ url_for('main.news') }}">
+                    Technology News
+                </a>
+
+                <a class="nav-link {% if request.endpoint == 'main.trends' %}active{% endif %}"
+                   href="{{ url_for('main.trends') }}">
+                    Trends
+                </a>
+
+                <a class="nav-link"
+                   href="https://github.com/"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    GitHub ↗
+                </a>
+
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="container-fluid px-3 px-lg-5 py-4 app-main">
+
+    {% block content %}{% endblock %}
+
+</main>
+
+<!-- FOOTER -->
+<footer class="footer mt-5 py-4">
+
+    <div class="container-fluid px-3 px-lg-5">
+
+        <div class="d-flex flex-column flex-md-row
+                    justify-content-between align-items-md-center gap-3">
+
+            <div>
+                <strong class="footer-brand">NEXUS RADAR</strong>
+                <span class="footer-separator"> · </span>
+                <span>Research & Technology Intelligence</span>
+            </div>
+
+            <div>
+                <span>Content belongs to its original publishers.</span>
+            </div>
+
+        </div>
+
+        <div class="footer-bottom mt-3 pt-3">
+            <span>Discover. Analyze. Anticipate.</span>
+            <span>Powered by Open Scientific Data</span>
+        </div>
+
+    </div>
+
+</footer>
+
+<!-- BOOTSTRAP -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

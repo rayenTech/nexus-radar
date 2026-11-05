@@ -1,70 +1,670 @@
+
 {% extends "base.html" %}
-{% block title %}Overview · Nexus Radar{% endblock %}
+
+{% block title %}Overview | NEXUS RADAR{% endblock %}
+
 {% block content %}
-<section class="hero-panel mb-4">
-  <div class="hero-copy">
-    <div class="eyebrow"><span class="pulse-dot"></span> OPEN-SOURCE INTELLIGENCE</div>
-    <h1>Research and technology,<br><span class="gradient-text">in one radar.</span></h1>
-    <p>Track scientific publications, cybersecurity developments, artificial intelligence and next-generation networks.</p>
-    <div class="d-flex flex-wrap gap-2 mt-4">
-      <a class="btn btn-primary px-4" href="{{ url_for('main.research') }}">Explore research</a>
-      <a class="btn btn-outline-light px-4" href="{{ url_for('main.news') }}">Read latest news</a>
-    </div>
-  </div>
-  <div class="hero-orbit" aria-hidden="true">
-    <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orbit-core"><span>NR</span></div>
-    <span class="orbit-node node-one">AI</span><span class="orbit-node node-two">6G</span><span class="orbit-node node-three">SOC</span>
-  </div>
-</section>
 
-<section class="row g-3 mb-4">
-  <div class="col-12 col-sm-6 col-xl-3"><div class="stat-card"><div class="stat-label">Total indexed items</div><div class="stat-value">{{ total }}</div><div class="stat-foot">Papers and news collected</div></div></div>
-  <div class="col-12 col-sm-6 col-xl-3"><div class="stat-card"><div class="stat-label">Research papers</div><div class="stat-value">{{ papers_count }}</div><div class="stat-foot">Scientific literature & preprints</div></div></div>
-  <div class="col-12 col-sm-6 col-xl-3"><div class="stat-card"><div class="stat-label">Technology news</div><div class="stat-value">{{ news_count }}</div><div class="stat-foot">News feeds and announcements</div></div></div>
-  <div class="col-12 col-sm-6 col-xl-3"><div class="stat-card"><div class="stat-label">Latest collection</div><div class="stat-value stat-date">{% if latest_collection %}{{ latest_collection.strftime('%d %b') }}{% else %}—{% endif %}</div><div class="stat-foot">{% if latest_collection %}{{ latest_collection.strftime('%H:%M UTC') }}{% else %}No collection yet{% endif %}</div></div></div>
-</section>
+<style>
+.radar-hero {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
 
-<section class="row g-3 mb-4">
-  <div class="col-12 col-xl-8">
-    <div class="panel h-100">
-      <div class="panel-heading"><div><div class="eyebrow">DOMAIN MONITOR</div><h2>Coverage by domain</h2></div><a href="{{ url_for('main.trends') }}" class="subtle-link">View trends →</a></div>
-      <div class="domain-grid">
-        <a class="domain-tile cyber" href="{{ url_for('main.research', category='cybersecurity') }}"><span class="domain-symbol">⌁</span><span class="domain-name">Cybersecurity</span><strong>{{ category_counts.cybersecurity }}</strong><small>Security research & threat intelligence</small></a>
-        <a class="domain-tile ai" href="{{ url_for('main.research', category='ai') }}"><span class="domain-symbol">✳</span><span class="domain-name">Artificial Intelligence</span><strong>{{ category_counts.ai }}</strong><small>LLMs, agents, ML and trustworthy AI</small></a>
-        <a class="domain-tile ngn" href="{{ url_for('main.research', category='ngn') }}"><span class="domain-symbol">⌘</span><span class="domain-name">NGN & Telecom</span><strong>{{ category_counts.ngn }}</strong><small>5G, 6G, Open RAN and networks</small></a>
-        <a class="domain-tile general" href="{{ url_for('main.research', category='general') }}"><span class="domain-symbol">◎</span><span class="domain-name">General</span><strong>{{ category_counts.general }}</strong><small>Other indexed topics</small></a>
-      </div>
-    </div>
-  </div>
-  <div class="col-12 col-xl-4">
-    <div class="panel h-100 source-panel">
-      <div class="eyebrow">DATA PIPELINE</div><h2>Sources connected</h2>
-      <div class="source-row"><span class="source-icon">A</span><div><strong>arXiv</strong><small>Preprints and research papers</small></div><span class="source-status">API</span></div>
-      <div class="source-row"><span class="source-icon">O</span><div><strong>OpenAlex</strong><small>Scholarly works metadata</small></div><span class="source-status">API</span></div>
-      <div class="source-row"><span class="source-icon">C</span><div><strong>Crossref</strong><small>DOI and publication metadata</small></div><span class="source-status">API</span></div>
-      <div class="source-row"><span class="source-icon">R</span><div><strong>RSS / Atom</strong><small>Technology and security news</small></div><span class="source-status">FEEDS</span></div>
-      <p class="source-note mb-0">A source is listed here when configured in the collector. A green API label does not guarantee that the last request succeeded.</p>
-    </div>
-  </div>
-</section>
+.hero-network-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
 
-<section class="panel">
-  <div class="panel-heading"><div><div class="eyebrow">LATEST DISCOVERIES</div><h2>Recently collected</h2></div><a href="{{ url_for('main.research') }}" class="subtle-link">Browse all →</a></div>
-  {% if latest_items %}
-    <div class="content-list">
-    {% for item in latest_items %}
-      <article class="content-row">
-        <div class="content-type-mark {{ item.category }}">{% if item.content_type == 'paper' %}P{% else %}N{% endif %}</div>
-        <div class="content-body"><div class="item-meta"><span class="category-label {{ item.category }}">{{ item.category|replace('_',' ')|title }}</span><span>{{ item.source }}</span><span>{% if item.published_at %}{{ item.published_at.strftime('%d %b %Y') }}{% else %}Date unavailable{% endif %}</span></div>
-          <a class="content-title" href="{{ url_for('main.item_detail', item_id=item.id) }}">{{ item.title }}</a>
-          {% if item.summary %}<p>{{ item.summary|truncate(180) }}</p>{% endif %}
+.radar-hero .hero-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.radar-hero .hero-content,
+.radar-hero .hero-index {
+    position: relative;
+    z-index: 2;
+}
+</style>
+
+<!-- CINEMATIC HERO -->
+<section class="radar-hero">
+
+    <canvas id="heroNetworkCanvas"
+            class="hero-network-canvas"></canvas>
+
+    <div class="hero-overlay"></div>
+
+    <div class="hero-content">
+
+        <div class="hero-status">
+            <span class="status-indicator"></span>
+            OPEN-SOURCE INTELLIGENCE PLATFORM
         </div>
-        <a class="row-arrow" href="{{ url_for('main.item_detail', item_id=item.id) }}" aria-label="Open item">↗</a>
-      </article>
-    {% endfor %}
+
+        <h1>
+            Understand the present.<br>
+            <span>Anticipate what comes next.</span>
+        </h1>
+
+        <p class="hero-description">
+            A unified intelligence platform monitoring scientific research,
+            artificial intelligence, cybersecurity and next-generation networks.
+        </p>
+
+        <div class="hero-actions">
+            <a href="{{ url_for('main.research') }}"
+               class="btn btn-primary hero-btn">
+                Explore Research <span>→</span>
+            </a>
+
+            <a href="{{ url_for('main.news') }}"
+               class="btn btn-outline-light hero-btn">
+                Technology Intelligence
+            </a>
+        </div>
+
+        <div class="hero-bottom-label">
+            <span>RESEARCH</span>
+            <span class="hero-dot">/</span>
+            <span>CYBERSECURITY</span>
+            <span class="hero-dot">/</span>
+            <span>ARTIFICIAL INTELLIGENCE</span>
+            <span class="hero-dot">/</span>
+            <span>6G & NGN</span>
+        </div>
+
     </div>
-  {% else %}
-    <div class="empty-state"><div class="empty-icon">⌁</div><h3>Your radar is ready</h3><p>No items have been collected yet. Run the collector to populate the dashboard.</p><code>python -m collector.run</code></div>
-  {% endif %}
+
+    <div class="hero-index">
+        <span>01</span>
+        <span class="hero-index-line"></span>
+        <span>INTELLIGENCE OVERVIEW</span>
+    </div>
+
 </section>
+
+
+<!-- PLATFORM STATISTICS -->
+<section class="dashboard-section stats-section">
+
+    <div class="section-heading">
+        <div>
+            <div class="section-eyebrow">THE INTELLIGENCE DATABASE</div>
+            <h2>Platform overview</h2>
+        </div>
+
+        <div class="live-label">
+            <span class="status-indicator"></span>
+            COLLECTION ACTIVE
+        </div>
+    </div>
+
+    <div class="stats-grid">
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <span class="stat-label">TOTAL DISCOVERIES</span>
+                <span class="stat-icon">◈</span>
+            </div>
+            <div class="stat-number" data-count="{{ total }}">0</div>
+            <div class="stat-caption">Collected intelligence records</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <span class="stat-label">RESEARCH PAPERS</span>
+                <span class="stat-icon">⌘</span>
+            </div>
+            <div class="stat-number" data-count="{{ papers_count }}">0</div>
+            <div class="stat-caption">Scientific publications and preprints</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <span class="stat-label">TECHNOLOGY NEWS</span>
+                <span class="stat-icon">↗</span>
+            </div>
+            <div class="stat-number" data-count="{{ news_count }}">0</div>
+            <div class="stat-caption">Technology and industry updates</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <span class="stat-label">LAST COLLECTION</span>
+                <span class="stat-icon">◷</span>
+            </div>
+            <div class="stat-date">
+                {% if latest_collection %}
+                    {{ latest_collection.strftime('%d %b %Y') }}
+                    <small>{{ latest_collection.strftime('%H:%M UTC') }}</small>
+                {% else %}
+                    Awaiting data
+                {% endif %}
+            </div>
+            <div class="stat-caption">Most recent database collection</div>
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- INTELLIGENCE DOMAINS -->
+<section class="dashboard-section">
+
+    <div class="section-heading">
+        <div>
+            <div class="section-eyebrow">MONITORED RESEARCH AREAS</div>
+            <h2>Intelligence domains</h2>
+        </div>
+        <span class="section-note">Four monitored knowledge areas</span>
+    </div>
+
+    <div class="domains-grid">
+
+        <a href="{{ url_for('main.research', category='cybersecurity') }}"
+           class="domain-card domain-cyber">
+
+            <div class="domain-symbol">⌁</div>
+
+            <div class="domain-content">
+                <span class="domain-number">01 / SECURITY</span>
+                <h3>Cybersecurity</h3>
+                <p>Threat intelligence, security operations and digital resilience.</p>
+                <div class="domain-count">
+                    {{ category_counts.cybersecurity }} records
+                </div>
+            </div>
+
+            <span class="domain-arrow">↗</span>
+        </a>
+
+
+        <a href="{{ url_for('main.research', category='ai') }}"
+           class="domain-card domain-ai">
+
+            <div class="domain-symbol">✳</div>
+
+            <div class="domain-content">
+                <span class="domain-number">02 / INTELLIGENCE</span>
+                <h3>Artificial Intelligence</h3>
+                <p>Machine learning, generative AI and intelligent systems.</p>
+                <div class="domain-count">
+                    {{ category_counts.ai }} records
+                </div>
+            </div>
+
+            <span class="domain-arrow">↗</span>
+        </a>
+
+
+        <a href="{{ url_for('main.research', category='ngn') }}"
+           class="domain-card domain-network">
+
+            <div class="domain-symbol">⌘</div>
+
+            <div class="domain-content">
+                <span class="domain-number">03 / CONNECTIVITY</span>
+                <h3>NGN & 6G</h3>
+                <p>Next-generation networks, telecom and network architectures.</p>
+                <div class="domain-count">
+                    {{ category_counts.ngn }} records
+                </div>
+            </div>
+
+            <span class="domain-arrow">↗</span>
+        </a>
+
+
+        <a href="{{ url_for('main.research', category='general') }}"
+           class="domain-card domain-general">
+
+            <div class="domain-symbol">◇</div>
+
+            <div class="domain-content">
+                <span class="domain-number">04 / DISCOVERY</span>
+                <h3>Other Research</h3>
+                <p>Emerging ideas and discoveries across related disciplines.</p>
+                <div class="domain-count">
+                    {{ category_counts.general }} records
+                </div>
+            </div>
+
+            <span class="domain-arrow">↗</span>
+        </a>
+
+    </div>
+
+</section>
+
+
+<!-- LATEST DISCOVERIES -->
+<section class="dashboard-section discoveries-section">
+
+    <div class="section-heading">
+
+        <div>
+            <div class="section-eyebrow">RECENTLY INDEXED</div>
+            <h2>Latest discoveries</h2>
+
+            <p class="section-subtitle">
+                The latest research papers and technology intelligence collected by Nexus Radar.
+            </p>
+        </div>
+
+        <a href="{{ url_for('main.research') }}"
+           class="section-link">
+            Explore all research <span>→</span>
+        </a>
+
+    </div>
+
+
+    <div class="discoveries-list">
+
+        {% for item in latest_items %}
+
+        <article class="discovery-card">
+
+            <div class="discovery-marker">
+                <span></span>
+            </div>
+
+            <div class="discovery-main">
+
+                <div class="discovery-meta">
+
+                    <span class="discovery-category">
+                        {{ item.category|replace('_', ' ')|upper }}
+                    </span>
+
+                    <span class="meta-divider">/</span>
+
+                    <span>{{ item.content_type|upper }}</span>
+
+                    <span class="meta-divider">/</span>
+
+                    <span>{{ item.source or 'Unknown source' }}</span>
+
+                    <span class="meta-divider">/</span>
+
+                    <span>
+                        {% if item.published_at %}
+                            {{ item.published_at.strftime('%d %b %Y') }}
+                        {% else %}
+                            Date unavailable
+                        {% endif %}
+                    </span>
+
+                </div>
+
+
+                <h3>
+                    <a href="{{ url_for('main.item_detail', item_id=item.id) }}">
+                        {{ item.title }}
+                    </a>
+                </h3>
+
+
+                <p class="discovery-summary">
+                    {{ item.summary or 'No summary is available for this discovery.' }}
+                </p>
+
+
+                <a href="{{ url_for('main.item_detail', item_id=item.id) }}"
+                   class="discovery-link">
+                    Read discovery <span>→</span>
+                </a>
+
+            </div>
+
+
+            <div class="discovery-index">
+                {{ "%02d"|format(loop.index) }}
+            </div>
+
+        </article>
+
+        {% else %}
+
+        <div class="empty-discoveries">
+
+            <div class="empty-symbol">◇</div>
+
+            <h3>No discoveries yet</h3>
+
+            <p>
+                New research and technology records will appear here after collection.
+            </p>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+<!-- DATA SOURCES -->
+<section class="dashboard-section sources-section">
+
+    <div class="section-heading">
+
+        <div>
+            <div class="section-eyebrow">INTELLIGENCE INFRASTRUCTURE</div>
+            <h2>Monitoring sources</h2>
+        </div>
+
+        <span class="section-note">
+            Open scientific and technology sources
+        </span>
+
+    </div>
+
+
+    <div class="sources-grid">
+
+        <div class="source-item">
+            <span class="source-symbol">a</span>
+            <div>
+                <h4>arXiv</h4>
+                <p>Scientific preprints</p>
+            </div>
+        </div>
+
+
+        <div class="source-item">
+            <span class="source-symbol">O</span>
+            <div>
+                <h4>OpenAlex</h4>
+                <p>Global research metadata</p>
+            </div>
+        </div>
+
+
+        <div class="source-item">
+            <span class="source-symbol">C</span>
+            <div>
+                <h4>Crossref</h4>
+                <p>Research publications</p>
+            </div>
+        </div>
+
+
+        <div class="source-item">
+            <span class="source-symbol">RSS</span>
+            <div>
+                <h4>RSS / Atom</h4>
+                <p>Technology news feeds</p>
+            </div>
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    // ==========================================
+    // NEXUS RADAR — ANIMATED NETWORK BACKGROUND
+    // ==========================================
+
+    const canvas = document.getElementById("heroNetworkCanvas");
+
+    if (canvas) {
+
+        const ctx = canvas.getContext("2d");
+        const hero = canvas.closest(".radar-hero");
+
+        let width = 0;
+        let height = 0;
+        let particles = [];
+        let animationId;
+        let lastFrame = 0;
+
+        const reduceMotion = window.matchMedia(
+            "(prefers-reduced-motion: reduce)"
+        ).matches;
+
+
+        function resize() {
+
+            const rect = hero.getBoundingClientRect();
+
+            width = rect.width;
+            height = rect.height;
+
+            const dpr = Math.min(
+                window.devicePixelRatio || 1,
+                2
+            );
+
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+
+            const count = Math.min(
+                110,
+                Math.max(35, Math.floor(width / 12))
+            );
+
+
+            particles = Array.from(
+                { length: count },
+                () => ({
+
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+
+                    vx: (Math.random() - 0.5) * 0.25,
+                    vy: (Math.random() - 0.5) * 0.25,
+
+                    radius: Math.random() * 1.8 + 0.6
+
+                })
+            );
+
+            draw(0);
+        }
+
+
+        function draw(timestamp) {
+
+            if (
+                !reduceMotion &&
+                timestamp - lastFrame < 30
+            ) {
+                animationId = requestAnimationFrame(draw);
+                return;
+            }
+
+            lastFrame = timestamp;
+
+            ctx.clearRect(0, 0, width, height);
+
+
+            particles.forEach((p, i) => {
+
+                // Particle movement
+                if (!reduceMotion) {
+
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    if (p.x < 0 || p.x > width) {
+                        p.vx *= -1;
+                    }
+
+                    if (p.y < 0 || p.y > height) {
+                        p.vy *= -1;
+                    }
+                }
+
+
+                // Connections between particles
+                for (
+                    let j = i + 1;
+                    j < particles.length;
+                    j++
+                ) {
+
+                    const q = particles[j];
+
+                    const dx = p.x - q.x;
+                    const dy = p.y - q.y;
+
+                    const distance = Math.sqrt(
+                        dx * dx + dy * dy
+                    );
+
+
+                    if (distance < 145) {
+
+                        const opacity =
+                            (1 - distance / 145) * 0.35;
+
+                        ctx.beginPath();
+
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(q.x, q.y);
+
+                        ctx.strokeStyle =
+                            `rgba(39, 174, 230, ${opacity})`;
+
+                        ctx.lineWidth = 0.7;
+
+                        ctx.stroke();
+                    }
+                }
+
+
+                // Glowing particles
+                ctx.beginPath();
+
+                ctx.arc(
+                    p.x,
+                    p.y,
+                    p.radius,
+                    0,
+                    Math.PI * 2
+                );
+
+                ctx.fillStyle = "#35c9ed";
+
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = "#159bd1";
+
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+
+            });
+
+
+            if (!reduceMotion) {
+                animationId = requestAnimationFrame(draw);
+            }
+
+        }
+
+
+        // Initialize animation
+        resize();
+
+
+        // Responsive canvas
+        window.addEventListener("resize", resize);
+
+
+        // Pause animation when browser tab is hidden
+        document.addEventListener(
+            "visibilitychange",
+            () => {
+
+                cancelAnimationFrame(animationId);
+
+                if (
+                    !document.hidden &&
+                    !reduceMotion
+                ) {
+                    animationId = requestAnimationFrame(draw);
+                }
+
+            }
+        );
+
+    }
+
+
+
+    // ==========================================
+    // PLATFORM STATISTICS COUNTERS
+    // ==========================================
+
+    const counters = document.querySelectorAll(
+        ".stat-number[data-count]"
+    );
+
+
+    counters.forEach(function (counter) {
+
+        const target = Number(counter.dataset.count) || 0;
+
+        const duration = 1200;
+
+        const startTime = performance.now();
+
+
+        function updateCounter(now) {
+
+            const progress = Math.min(
+                (now - startTime) / duration,
+                1
+            );
+
+            const eased = 1 - Math.pow(
+                1 - progress,
+                3
+            );
+
+
+            counter.textContent = Math.floor(
+                target * eased
+            ).toLocaleString();
+
+
+            if (progress < 1) {
+                requestAnimationFrame(updateCounter);
+            }
+
+        }
+
+
+        requestAnimationFrame(updateCounter);
+
+    });
+
+});
+
+</script>
+
 {% endblock %}

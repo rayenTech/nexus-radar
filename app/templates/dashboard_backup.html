@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Overview · Nexus Radar{% endblock %}
+{% block content %}
+<section class="hero-panel mb-4">
+  <div class="hero-copy">
+    <div class="eyebrow"><span class="pulse-dot"></span> OPEN-SOURCE INTELLIGENCE</div>
+    <h1>Research and technology,<br><span class="gradient-text">in one radar.</span></h1>
+    <p>Track scientific publications, cybersecurity developments, artificial intelligence and next-generation networks.</p>
+    <div class="d-flex flex-wrap gap-2 mt-4">
+      <a class="btn btn-primary px-4" href="{{ url_for('main.research') }}">Explore research</a>
+      <a class="btn btn-outline-light px-4" href="{{ url_for('main.news') }}">Read latest news</a>
+    </div>
+  </div>
+  <div class="hero-orbit" aria-hidden="true">
+    <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orbit-core"><span>NR</span></div>
+    <span class="orbit-node node-one">AI</span><span class="orbit-node node-two">6G</span><span class="orbit-node node-three">SOC</span>
+  </div>
+</section>
+
+<section class="row g-3 mb-4">
+  <div class="col-12 col-sm-6 col-xl-3"><div class="stat-card"><div class="stat-label">Total indexed items</div><div class="stat-value">{{ total }}</div><div class="stat-foot">Papers and news collected</div></div></div>
+  <div class="col-12 col-sm-6 col-xl-3"><div class="stat-card"><div class="stat-label">Research papers</div><div class="stat-value">{{ papers_count }}</div><div class="stat-foot">Scientific literature & preprints</div></div></div>
+  <div class="col-12 col-sm-6 col-xl-3"><div class="stat-card"><div class="stat-label">Technology news</div><div class="stat-value">{{ news_count }}</div><div class="stat-foot">News feeds and announcements</div></div></div>
+  <div class="col-12 col-sm-6 col-xl-3"><div class="stat-card"><div class="stat-label">Latest collection</div><div class="stat-value stat-date">{% if latest_collection %}{{ latest_collection.strftime('%d %b') }}{% else %}—{% endif %}</div><div class="stat-foot">{% if latest_collection %}{{ latest_collection.strftime('%H:%M UTC') }}{% else %}No collection yet{% endif %}</div></div></div>
+</section>
+
+<section class="row g-3 mb-4">
+  <div class="col-12 col-xl-8">
+    <div class="panel h-100">
+      <div class="panel-heading"><div><div class="eyebrow">DOMAIN MONITOR</div><h2>Coverage by domain</h2></div><a href="{{ url_for('main.trends') }}" class="subtle-link">View trends →</a></div>
+      <div class="domain-grid">
+        <a class="domain-tile cyber" href="{{ url_for('main.research', category='cybersecurity') }}"><span class="domain-symbol">⌁</span><span class="domain-name">Cybersecurity</span><strong>{{ category_counts.cybersecurity }}</strong><small>Security research & threat intelligence</small></a>
+        <a class="domain-tile ai" href="{{ url_for('main.research', category='ai') }}"><span class="domain-symbol">✳</span><span class="domain-name">Artificial Intelligence</span><strong>{{ category_counts.ai }}</strong><small>LLMs, agents, ML and trustworthy AI</small></a>
+        <a class="domain-tile ngn" href="{{ url_for('main.research', category='ngn') }}"><span class="domain-symbol">⌘</span><span class="domain-name">NGN & Telecom</span><strong>{{ category_counts.ngn }}</strong><small>5G, 6G, Open RAN and networks</small></a>
+        <a class="domain-tile general" href="{{ url_for('main.research', category='general') }}"><span class="domain-symbol">◎</span><span class="domain-name">General</span><strong>{{ category_counts.general }}</strong><small>Other indexed topics</small></a>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-xl-4">
+    <div class="panel h-100 source-panel">
+      <div class="eyebrow">DATA PIPELINE</div><h2>Sources connected</h2>
+      <div class="source-row"><span class="source-icon">A</span><div><strong>arXiv</strong><small>Preprints and research papers</small></div><span class="source-status">API</span></div>
+      <div class="source-row"><span class="source-icon">O</span><div><strong>OpenAlex</strong><small>Scholarly works metadata</small></div><span class="source-status">API</span></div>
+      <div class="source-row"><span class="source-icon">C</span><div><strong>Crossref</strong><small>DOI and publication metadata</small></div><span class="source-status">API</span></div>
+      <div class="source-row"><span class="source-icon">R</span><div><strong>RSS / Atom</strong><small>Technology and security news</small></div><span class="source-status">FEEDS</span></div>
+      <p class="source-note mb-0">A source is listed here when configured in the collector. A green API label does not guarantee that the last request succeeded.</p>
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-heading"><div><div class="eyebrow">LATEST DISCOVERIES</div><h2>Recently collected</h2></div><a href="{{ url_for('main.research') }}" class="subtle-link">Browse all →</a></div>
+  {% if latest_items %}
+    <div class="content-list">
+    {% for item in latest_items %}
+      <article class="content-row">
+        <div class="content-type-mark {{ item.category }}">{% if item.content_type == 'paper' %}P{% else %}N{% endif %}</div>
+        <div class="content-body"><div class="item-meta"><span class="category-label {{ item.category }}">{{ item.category|replace('_',' ')|title }}</span><span>{{ item.source }}</span><span>{% if item.published_at %}{{ item.published_at.strftime('%d %b %Y') }}{% else %}Date unavailable{% endif %}</span></div>
+          <a class="content-title" href="{{ url_for('main.item_detail', item_id=item.id) }}">{{ item.title }}</a>
+          {% if item.summary %}<p>{{ item.summary|truncate(180) }}</p>{% endif %}
+        </div>
+        <a class="row-arrow" href="{{ url_for('main.item_detail', item_id=item.id) }}" aria-label="Open item">↗</a>
+      </article>
+    {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state"><div class="empty-icon">⌁</div><h3>Your radar is ready</h3><p>No items have been collected yet. Run the collector to populate the dashboard.</p><code>python -m collector.run</code></div>
+  {% endif %}
+</section>
+{% endblock %}
