@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ item.title|truncate(55) }} · Nexus Radar{% endblock %}
+{% block content %}
+<div class="detail-wrap">
+  <a class="back-link" href="{{ url_for('main.research') if item.content_type == 'paper' else url_for('main.news') }}">← Back to {{ 'research' if item.content_type == 'paper' else 'news' }}</a>
+  <article class="panel detail-panel mt-3">
+    <div class="item-meta mb-3"><span class="category-label {{ item.category }}">{{ item.category|title }}</span><span>{{ item.source }}</span><span>{{ item.content_type|title }}</span><span>{% if item.published_at %}{{ item.published_at.strftime('%d %B %Y') }}{% else %}Publication date unavailable{% endif %}</span></div>
+    <h1>{{ item.title }}</h1>
+    {% if item.authors %}<div class="detail-authors">{{ item.authors|join(', ') }}</div>{% endif %}
+    <div class="detail-summary">{{ item.summary or 'No abstract or summary was provided by the source.' }}</div>
+    {% if item.keywords %}<div class="keyword-list mt-4">{% for keyword in item.keywords %}<span>{{ keyword }}</span>{% endfor %}</div>{% endif %}
+    <div class="detail-facts mt-4"><div><small>Source</small><strong>{{ item.source }}</strong></div><div><small>Relevance score</small><strong>{{ '%.1f'|format(item.relevance_score) }}/10</strong></div>{% if item.doi %}<div><small>DOI</small><strong>{{ item.doi }}</strong></div>{% endif %}</div>
+    <div class="mt-4"><a class="btn btn-primary" href="{{ item.url }}" target="_blank" rel="noopener noreferrer">Open original source ↗</a></div>
+  </article>
+</div>
+{% endblock %}

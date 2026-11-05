@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} · Nexus Radar{% endblock %}
+{% block content %}
+<section class="page-heading mb-4"><div class="eyebrow">NEXUS LIBRARY</div><h1>{{ title }}</h1><p>{{ subtitle }}</p></section>
+<section class="panel">
+  <form class="filter-bar row g-2 align-items-end mb-3" method="get">
+    <div class="col-12 col-md-6"><label for="q" class="form-label">Search</label><input id="q" name="q" class="form-control" value="{{ request.args.get('q','') }}" placeholder="Search title, abstract or source..."></div>
+    <div class="col-8 col-md-3"><label for="category" class="form-label">Domain</label><select id="category" name="category" class="form-select"><option value="">All domains</option>{% for value,label in [('cybersecurity','Cybersecurity'),('ai','Artificial Intelligence'),('ngn','NGN & Telecom'),('general','General')] %}<option value="{{ value }}" {% if request.args.get('category') == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <div class="col-4 col-md-3 d-grid"><button class="btn btn-primary" type="submit">Apply filters</button></div>
+  </form>
+  <div class="list-summary">{{ pagination.total }} result(s) · Page {{ pagination.page }} of {{ pagination.pages or 1 }}</div>
+  {% if pagination.items %}
+    <div class="content-list">
+    {% for item in pagination.items %}
+      <article class="content-row">
+        <div class="content-type-mark {{ item.category }}">{% if item.content_type == 'paper' %}P{% else %}N{% endif %}</div>
+        <div class="content-body"><div class="item-meta"><span class="category-label {{ item.category }}">{{ item.category|replace('_',' ')|title }}</span><span>{{ item.source }}</span><span>{% if item.published_at %}{{ item.published_at.strftime('%d %b %Y') }}{% else %}Date unavailable{% endif %}</span>{% if item.content_type == 'paper' %}<span>Score {{ '%.1f'|format(item.relevance_score) }}</span>{% endif %}</div>
+          <a class="content-title" href="{{ url_for('main.item_detail', item_id=item.id) }}">{{ item.title }}</a>
+          {% if item.summary %}<p>{{ item.summary|truncate(260) }}</p>{% endif %}
+          {% if item.authors %}<div class="item-authors">{{ item.authors[:4]|join(', ') }}{% if item.authors|length > 4 %} et al.{% endif %}</div>{% endif %}
+        </div>
+        <a class="row-arrow" href="{{ url_for('main.item_detail', item_id=item.id) }}" aria-label="Open item">↗</a>
+      </article>
+    {% endfor %}
+    </div>
+    <nav class="pagination-wrap" aria-label="Pagination"><ul class="pagination mb-0">
+      <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}"><a class="page-link" href="{{ url_for(request.endpoint, page=pagination.prev_num, q=request.args.get('q',''), category=request.args.get('category','')) if pagination.has_prev else '#' }}">Previous</a></li>
+      <li class="page-item disabled"><span class="page-link">{{ pagination.page }} / {{ pagination.pages or 1 }}</span></li>
+      <li class="page-item {% if not pagination.has_next %}disabled{% endif %}"><a class="page-link" href="{{ url_for(request.endpoint, page=pagination.next_num, q=request.args.get('q',''), category=request.args.get('category','')) if pagination.has_next else '#' }}">Next</a></li>
+    </ul></nav>
+  {% else %}
+    <div class="empty-state"><div class="empty-icon">⌕</div><h3>No results found</h3><p>Try another keyword or run the collector to discover new content.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

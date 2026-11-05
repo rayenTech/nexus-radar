@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Research trends · Nexus Radar{% endblock %}
+{% block content %}
+<section class="page-heading mb-4"><div class="eyebrow">SIGNAL DETECTION</div><h1>Research trends</h1><p>Most frequent keywords in the items currently stored in your radar.</p></section>
+<div class="row g-3">
+  <div class="col-12 col-xl-8"><section class="panel h-100"><div class="panel-heading"><div><div class="eyebrow">KEYWORD FREQUENCY</div><h2>Topics appearing most often</h2></div></div>
+    {% if top_terms %}<div class="trend-list">{% for term in top_terms %}<div class="trend-item"><span class="trend-name">{{ term.term }}</span><div class="trend-track"><span style="width: {{ (term.count / top_terms[0].count * 100) if top_terms[0].count else 0 }}%"></span></div><strong>{{ term.count }}</strong></div>{% endfor %}</div>{% else %}<div class="empty-state"><h3>Not enough data yet</h3><p>Collect papers and news to build the trend overview.</p></div>{% endif %}
+  </section></div>
+  <div class="col-12 col-xl-4"><section class="panel h-100"><div class="eyebrow">CONTENT DISTRIBUTION</div><h2>Domains</h2><div class="category-counts">{% for category,label in [('cybersecurity','Cybersecurity'),('ai','Artificial Intelligence'),('ngn','NGN & Telecom'),('general','General')] %}<div><span class="category-label {{ category }}">{{ label }}</span><strong>{{ category_counts[category] }}</strong></div>{% endfor %}</div><p class="source-note mt-4">These are simple frequency indicators from collected metadata, not a statistically validated measure of research impact or novelty.</p></section></div>
+</div>
+{% endblock %}
